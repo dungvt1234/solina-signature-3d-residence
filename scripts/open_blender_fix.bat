@@ -1,0 +1,6 @@
+@echo off
+echo Dang mo Blender va chay fix script...
+start "" "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" "D:\01_Workspace\SOLLINA_Signature_PRO_NetCang.blend" --python "C:\Users\DELL\antigravity\Solina-Signature-B.11.17-—-3D-POV-Residence\scripts\auto_fix_full.py"
+echo Blender dang chay, cho 15 giay...
+timeout /t 15 /nobreak > nul
+echo Xong!

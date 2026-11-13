@@ -12,6 +12,10 @@ export interface MaterialLibrary {
   travertine: THREE.MeshStandardMaterial;
   grassTurf: THREE.MeshStandardMaterial;
   woodOak: THREE.MeshStandardMaterial;
+  woodLaminate: THREE.MeshPhysicalMaterial;
+  quartzTop: THREE.MeshPhysicalMaterial;
+  skirtingBoard: THREE.MeshStandardMaterial;
+  acUnit: THREE.MeshStandardMaterial;
   flutedWood: THREE.MeshStandardMaterial;
   creamFabric: THREE.MeshPhysicalMaterial;
   tealAccent: THREE.MeshPhysicalMaterial;
@@ -162,6 +166,40 @@ export function createMaterialLibrary(
     map: textures.woodGrain,
     roughness: 0.5,
     metalness: 0.03,
+  });
+
+  // Gỗ Laminate sàn phòng ngủ — ấm, vân gỗ nâu sáng theo tiêu chuẩn Beacon
+  const woodLaminate = new THREE.MeshPhysicalMaterial({
+    color: 0xc8a97e,
+    roughness: 0.68,
+    metalness: 0.0,
+    clearcoat: 0.18,
+    clearcoatRoughness: 0.55,
+    reflectivity: 0.12,
+  });
+
+  // Đá Quartz mặt bàn bếp — trắng vân xám, bóng mịn
+  const quartzTop = new THREE.MeshPhysicalMaterial({
+    color: 0xf0ede8,
+    roughness: 0.04,
+    metalness: 0.0,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.08,
+    reflectivity: 0.9,
+  });
+
+  // Len chân tường trắng sứ — skirting board
+  const skirtingBoard = new THREE.MeshStandardMaterial({
+    color: 0xfaf8f5,
+    roughness: 0.25,
+    metalness: 0.0,
+  });
+
+  // Điều hòa nhựa trắng
+  const acUnit = new THREE.MeshStandardMaterial({
+    color: 0xf5f5f3,
+    roughness: 0.3,
+    metalness: 0.02,
   });
 
   const flutedWood = new THREE.MeshStandardMaterial({
@@ -364,6 +402,10 @@ export function createMaterialLibrary(
     travertine,
     grassTurf,
     woodOak,
+    woodLaminate,
+    quartzTop,
+    skirtingBoard,
+    acUnit,
     flutedWood,
     creamFabric,
     tealAccent,
@@ -399,6 +441,10 @@ export function createMaterialLibrary(
     travertine,
     grassTurf,
     woodOak,
+    woodLaminate,
+    quartzTop,
+    skirtingBoard,
+    acUnit,
     flutedWood,
     creamFabric,
     tealAccent,

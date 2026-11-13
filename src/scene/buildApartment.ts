@@ -236,6 +236,61 @@ export function buildSolinaApartment(
   intFloor.receiveShadow = true;
   root.add(intFloor);
 
+  // 1a-2. Sàn Gỗ Laminate Phòng Ngủ (đè lên Marble, theo tiêu chuẩn Beacon)
+  // Master bedroom: x[-6.12..-2.42], z[-2.2..1.15]
+  const masterFloorShape = new THREE.Shape();
+  masterFloorShape.moveTo(-6.12, -2.2);
+  masterFloorShape.lineTo(-2.42, -2.2);
+  masterFloorShape.lineTo(-2.42, 1.15);
+  masterFloorShape.lineTo(-6.12, 1.15);
+  masterFloorShape.quadraticCurveTo(-6.12, -0.8, -6.12, -0.8);
+  masterFloorShape.closePath();
+  const masterFloorGeo = new THREE.ExtrudeGeometry(masterFloorShape, { depth: 0.012, bevelEnabled: false });
+  masterFloorGeo.rotateX(Math.PI / 2);
+  const masterFloorMesh = new THREE.Mesh(masterFloorGeo, mats.woodLaminate);
+  masterFloorMesh.position.y = 0.009;
+  masterFloorMesh.receiveShadow = true;
+  root.add(masterFloorMesh);
+
+  // Bedroom 2: x[-2.42..1.15], z[-2.2..1.15]
+  const bed2FloorShape = new THREE.Shape();
+  bed2FloorShape.moveTo(-2.42, -2.2);
+  bed2FloorShape.lineTo(1.15, -2.2);
+  bed2FloorShape.lineTo(1.15, 1.15);
+  bed2FloorShape.lineTo(-2.42, 1.15);
+  bed2FloorShape.closePath();
+  const bed2FloorGeo = new THREE.ExtrudeGeometry(bed2FloorShape, { depth: 0.012, bevelEnabled: false });
+  bed2FloorGeo.rotateX(Math.PI / 2);
+  const bed2FloorMesh = new THREE.Mesh(bed2FloorGeo, mats.woodLaminate);
+  bed2FloorMesh.position.y = 0.009;
+  bed2FloorMesh.receiveShadow = true;
+  root.add(bed2FloorMesh);
+
+  // 1a-3. Len chân tường trắng sứ (Skirting boards) dọc theo toàn bộ tường
+  function addSkirting(x1: number, z1: number, x2: number, z2: number) {
+    const dx = x2 - x1; const dz = z2 - z1;
+    const len = Math.hypot(dx, dz);
+    const angle = Math.atan2(dz, dx);
+    const geo = new THREE.BoxGeometry(len, 0.08, 0.012);
+    const mesh = new THREE.Mesh(geo, mats.skirtingBoard);
+    mesh.position.set((x1+x2)/2, 0.04, (z1+z2)/2);
+    mesh.rotation.y = -angle;
+    mesh.castShadow = true;
+    root.add(mesh);
+  }
+  // Tường ngoài căn hộ
+  addSkirting(-6.12, 3.62, 6.12, 3.62);   // Tường sau
+  addSkirting(6.12, 3.62, 6.12, -2.2);    // Tường phải
+  addSkirting(-6.12, 3.62, -6.12, -0.8);  // Tường trái trên
+  // Vách phòng ngủ
+  addSkirting(-2.42, -2.2, -2.42, 1.15);  // Vách master/bed2
+  addSkirting(1.15, -2.2, 1.15, 1.15);    // Vách bed2/living
+  addSkirting(-6.12, 1.15, 1.15, 1.15);   // Tường trên bedroom
+  // Phòng tắm / bếp / foyer
+  addSkirting(1.15, 1.15, 6.12, 1.15);
+  addSkirting(-2.42, 1.15, -2.42, 3.62);
+  addSkirting(1.15, 3.62, 6.12, 3.62);
+
   // 1b. Balcony Flooring: Waterproof Sub-Base + Lush Green Resort Grass Turf (Thảm cỏ xanh sân vườn ban công)
   const balcShape = new THREE.Shape();
   balcShape.moveTo(-6.15, -1.4);
@@ -509,6 +564,47 @@ export function buildSolinaApartment(
   const kitchen = createKitchenCounter(mats);
   kitchen.position.set(1.98, 0, 3.22);
   root.add(kitchen);
+
+  // Mặt đá Quartz bàn bếp (đè lên top tủ bếp — theo tiêu chuẩn Beacon: Đá Quartz)
+  const quartzCounterTop = new THREE.Mesh(
+    new THREE.BoxGeometry(4.55, 0.025, 0.72),
+    mats.quartzTop
+  );
+  quartzCounterTop.position.set(1.98, 0.925, 3.22);
+  quartzCounterTop.castShadow = true;
+  quartzCounterTop.receiveShadow = true;
+  root.add(quartzCounterTop);
+
+  // Mặt đảo bếp Quartz
+  const quartzIsland = new THREE.Mesh(
+    new THREE.BoxGeometry(1.65, 0.025, 0.95),
+    mats.quartzTop
+  );
+  quartzIsland.position.set(1.98, 0.945, 2.28);
+  quartzIsland.castShadow = true;
+  root.add(quartzIsland);
+
+  // Điều hòa âm trần phòng khách — Daikin/Mitsubishi (theo tiêu chuẩn Beacon)
+  function addCeilingAC(x: number, z: number) {
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(0.88, 0.065, 0.28),
+      mats.acUnit
+    );
+    body.position.set(x, WALL_HEIGHT - 0.035, z);
+    root.add(body);
+    // Louver grill
+    for (let i = 0; i < 5; i++) {
+      const louver = new THREE.Mesh(
+        new THREE.BoxGeometry(0.82, 0.008, 0.04),
+        mats.acUnit
+      );
+      louver.position.set(x, WALL_HEIGHT - 0.068, z - 0.08 + i * 0.04);
+      louver.rotation.x = 0.2;
+      root.add(louver);
+    }
+  }
+  addCeilingAC(3.85, -0.80);   // Phòng khách trái
+  addCeilingAC(5.20, -0.80);   // Phòng khách phải
 
   // --- BALCONY LOUNGE & PALMS ---
   const rattanLounge = createRattanLoungeSet(mats);
