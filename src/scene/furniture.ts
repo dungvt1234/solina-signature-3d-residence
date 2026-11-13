@@ -441,6 +441,16 @@ export function createKingBed(mats: MaterialLibrary): THREE.Group {
   headboard.position.set(0.05, 0.72, 0);
   group.add(headboard);
 
+  // Real 3D Fluted Wood Slats on headboard wings
+  const bedSlatGeo = new THREE.BoxGeometry(0.024, 1.22, 0.028);
+  [-1.08, 1.08].forEach((wingZ) => {
+    for (let s = -5; s <= 5; s++) {
+      const slat = new THREE.Mesh(bedSlatGeo, mats.woodOak);
+      slat.position.set(0.09, 0.72, wingZ + s * 0.042);
+      group.add(slat);
+    }
+  });
+
   const headboardCushion = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.78, 1.84), mats.creamFabric);
   headboardCushion.position.set(0.12, 0.76, 0);
   group.add(headboardCushion);
@@ -772,10 +782,25 @@ export function createKitchenCounter(mats: MaterialLibrary): THREE.Group {
   fridgeSeam.position.set(-2.45, 0.76, -0.34);
   group.add(fridgeSeam);
 
-  // Main Base Cabinet (length 4.45m)
+  // Main Base Cabinet (length 4.45m) with warm fluted wood slats
   const baseCab = new THREE.Mesh(new THREE.BoxGeometry(4.45, 0.84, 0.62), mats.creamFabric);
   baseCab.position.set(0.22, 0.42, 0.02);
   group.add(baseCab);
+
+  // 3D Fluted wood slats on kitchen island front facade
+  const kSlatGeo = new THREE.BoxGeometry(0.028, 0.82, 0.022);
+  const kSlatCount = 68;
+  const kSlatsMesh = new THREE.InstancedMesh(kSlatGeo, mats.woodOak, kSlatCount);
+  const kMat = new THREE.Matrix4();
+  for (let i = 0; i < kSlatCount; i++) {
+    const kx = -1.95 + (i / (kSlatCount - 1)) * 4.35;
+    kMat.setPosition(kx, 0.42, -0.30);
+    kSlatsMesh.setMatrixAt(i, kMat);
+  }
+  kSlatsMesh.instanceMatrix.needsUpdate = true;
+  kSlatsMesh.castShadow = true;
+  kSlatsMesh.receiveShadow = true;
+  group.add(kSlatsMesh);
 
   // Marble Countertop
   const counterTop = new THREE.Mesh(new THREE.BoxGeometry(4.50, 0.05, 0.66), mats.marbleSlab);
@@ -843,14 +868,41 @@ export function createKitchenCounter(mats: MaterialLibrary): THREE.Group {
   return group;
 }
 
-// Full-Length Living-to-Foyer Backlit Wood Slat Showcase Wall + 65" OLED TV
+// Full-Length Living-to-Foyer Backlit 3D Wood Slat Showcase Wall + 65" OLED TV
 export function createTvFeatureWall(mats: MaterialLibrary): THREE.Group {
   const group = new THREE.Group();
 
-  // Main fluted wood panel spanning Living Room + Foyer wall (length 5.1m)
-  const panel = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.75, 5.15), mats.flutedWood);
-  panel.position.set(0, 1.38, 1.05);
-  group.add(panel);
+  // Dark acoustic backing panel spanning Living Room + Foyer wall (length 5.15m)
+  const backing = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.75, 5.15), mats.wallTopCap);
+  backing.position.set(0.02, 1.38, 1.05);
+  group.add(backing);
+
+  // Real 3D Extruded Wood Slats (Hệ lam gỗ 3D nổi gồm 98 thanh nan chữ nhật)
+  const slatGeo = new THREE.BoxGeometry(0.032, 2.72, 0.034);
+  const slatCount = 98;
+  const slatsMesh = new THREE.InstancedMesh(slatGeo, mats.woodOak, slatCount);
+  const matrix = new THREE.Matrix4();
+  const wallLen = 5.10;
+  const startZ = 1.05 - wallLen / 2 + 0.026;
+
+  for (let i = 0; i < slatCount; i++) {
+    const z = startZ + (i / (slatCount - 1)) * (wallLen - 0.052);
+    matrix.setPosition(-0.016, 1.38, z);
+    slatsMesh.setMatrixAt(i, matrix);
+  }
+  slatsMesh.instanceMatrix.needsUpdate = true;
+  slatsMesh.castShadow = true;
+  slatsMesh.receiveShadow = true;
+  group.add(slatsMesh);
+
+  // Top & bottom champagne brass channel trims
+  const topTrim = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.03, 5.15), mats.brass);
+  topTrim.position.set(-0.02, 2.74, 1.05);
+  group.add(topTrim);
+
+  const botTrim = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.03, 5.15), mats.brass);
+  botTrim.position.set(-0.02, 0.015, 1.05);
+  group.add(botTrim);
 
   // Full-length warm backlit LED wash strips (top & vertical accents)
   const topLed = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.03, 5.10), mats.warmLed);
