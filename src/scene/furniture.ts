@@ -10,6 +10,7 @@ export interface MaterialLibrary {
   marbleFloor: THREE.MeshPhysicalMaterial;
   marbleSlab: THREE.MeshPhysicalMaterial;
   travertine: THREE.MeshStandardMaterial;
+  grassTurf: THREE.MeshStandardMaterial;
   woodOak: THREE.MeshStandardMaterial;
   flutedWood: THREE.MeshStandardMaterial;
   creamFabric: THREE.MeshPhysicalMaterial;
@@ -67,6 +68,32 @@ export function createMaterialLibrary(
   realMarbleNor.repeat.set(4, 3);
   registerDisposable(realMarbleNor);
 
+  // Real Photographic PBR Lawn Grass Texture Set (AmbientCG CC0 Scanned Lawn Turf)
+  const realGrassColor = texLoader.load('./textures/grass/grass_color.jpg');
+  realGrassColor.wrapS = THREE.RepeatWrapping;
+  realGrassColor.wrapT = THREE.RepeatWrapping;
+  realGrassColor.repeat.set(8, 2.5);
+  realGrassColor.colorSpace = THREE.SRGBColorSpace;
+  registerDisposable(realGrassColor);
+
+  const realGrassRough = texLoader.load('./textures/grass/grass_rough.jpg');
+  realGrassRough.wrapS = THREE.RepeatWrapping;
+  realGrassRough.wrapT = THREE.RepeatWrapping;
+  realGrassRough.repeat.set(8, 2.5);
+  registerDisposable(realGrassRough);
+
+  const realGrassNor = texLoader.load('./textures/grass/grass_nor.jpg');
+  realGrassNor.wrapS = THREE.RepeatWrapping;
+  realGrassNor.wrapT = THREE.RepeatWrapping;
+  realGrassNor.repeat.set(8, 2.5);
+  registerDisposable(realGrassNor);
+
+  const realGrassAo = texLoader.load('./textures/grass/grass_ao.jpg');
+  realGrassAo.wrapS = THREE.RepeatWrapping;
+  realGrassAo.wrapT = THREE.RepeatWrapping;
+  realGrassAo.repeat.set(8, 2.5);
+  registerDisposable(realGrassAo);
+
   const plasterWall = new THREE.MeshStandardMaterial({
     color: 0xe0d6c8,
     roughness: 0.9,
@@ -117,6 +144,18 @@ export function createMaterialLibrary(
     bumpScale: 0.012,
     roughness: 0.72,
     metalness: 0.01,
+  });
+
+  const grassTurf = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    map: realGrassColor,
+    normalMap: realGrassNor,
+    normalScale: new THREE.Vector2(0.9, 0.9),
+    roughnessMap: realGrassRough,
+    roughness: 0.92,
+    aoMap: realGrassAo,
+    aoMapIntensity: 0.85,
+    metalness: 0.0,
   });
 
   const woodOak = new THREE.MeshStandardMaterial({
@@ -323,6 +362,7 @@ export function createMaterialLibrary(
     marbleFloor,
     marbleSlab,
     travertine,
+    grassTurf,
     woodOak,
     flutedWood,
     creamFabric,
@@ -357,6 +397,7 @@ export function createMaterialLibrary(
     marbleFloor,
     marbleSlab,
     travertine,
+    grassTurf,
     woodOak,
     flutedWood,
     creamFabric,

@@ -236,7 +236,7 @@ export function buildSolinaApartment(
   intFloor.receiveShadow = true;
   root.add(intFloor);
 
-  // Balcony Travertine Floor Deck
+  // 1b. Balcony Flooring: Waterproof Sub-Base + Lush Green Resort Grass Turf (Thảm cỏ xanh sân vườn ban công)
   const balcShape = new THREE.Shape();
   balcShape.moveTo(-6.15, -1.4);
   balcShape.quadraticCurveTo(-6.15, -3.76, -4.0, -3.76);
@@ -246,14 +246,25 @@ export function buildSolinaApartment(
   balcShape.quadraticCurveTo(-5.85, -2.2, -5.85, -1.4);
   balcShape.closePath();
 
-  const balcGeo = new THREE.ExtrudeGeometry(balcShape, {
-    depth: 0.014,
+  const balcBaseGeo = new THREE.ExtrudeGeometry(balcShape, {
+    depth: 0.016,
     bevelEnabled: false,
     curveSegments: 24,
   });
-  balcGeo.rotateX(Math.PI / 2);
-  const balcFloor = new THREE.Mesh(balcGeo, mats.travertine);
-  balcFloor.position.y = 0.005;
+  balcBaseGeo.rotateX(Math.PI / 2);
+  const balcBase = new THREE.Mesh(balcBaseGeo, mats.travertine);
+  balcBase.position.y = 0.003;
+  balcBase.receiveShadow = true;
+  root.add(balcBase);
+
+  const balcGrassGeo = new THREE.ExtrudeGeometry(balcShape, {
+    depth: 0.018,
+    bevelEnabled: false,
+    curveSegments: 24,
+  });
+  balcGrassGeo.rotateX(Math.PI / 2);
+  const balcFloor = new THREE.Mesh(balcGrassGeo, mats.grassTurf);
+  balcFloor.position.y = 0.009;
   balcFloor.receiveShadow = true;
   root.add(balcFloor);
 
