@@ -504,9 +504,9 @@ function setShadow(obj: THREE.Object3D, cast = true, receive = true) {
 export function createKingBed(mats: MaterialLibrary): THREE.Group {
   const group = new THREE.Group();
 
-  // Area Rug beneath bed (offset Y = 0.012 to avoid Z-fighting)
+  // Area Rug beneath bed (offset Y = 0.015 to avoid Z-fighting with laminate floor)
   const rug = new THREE.Mesh(new THREE.BoxGeometry(2.75, 0.016, 2.9), mats.coastalRug);
-  rug.position.set(1.12, 0.008, 0);
+  rug.position.set(1.12, 0.015, 0);
   group.add(rug);
 
   // Wooden Bed Frame Base

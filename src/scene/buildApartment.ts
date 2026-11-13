@@ -217,46 +217,11 @@ export function buildSolinaApartment(
     root.add(floorReflector);
   }
 
-  // Interior procedural fallback group (replaced seamlessly when Blender GLB model loads)
+  // Interior detailed furniture & architecture group
   const interiorGroup = new THREE.Group();
-  interiorGroup.name = 'Procedural_Apartment_Fallback';
+  interiorGroup.name = 'Full_Furnished_Apartment_Group';
   root.add(interiorGroup);
-
-  // Load Photorealistic Blender-Exported glTF Model (apartment.glb)
-  const gltfLoader = new GLTFLoader();
-  const blenderModelGroup = new THREE.Group();
-  blenderModelGroup.name = 'Blender_Apartment_GLB';
-  root.add(blenderModelGroup);
-
-  gltfLoader.load(
-    './models/apartment.glb',
-    (gltf) => {
-      gltf.scene.traverse((child) => {
-        if ((child as THREE.Mesh).isMesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-          const mesh = child as THREE.Mesh;
-          if (mesh.material) {
-            const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-            mats.forEach((m) => {
-              if (m && 'envMapIntensity' in m) {
-                (m as any).envMapIntensity = 1.0;
-                m.needsUpdate = true;
-              }
-            });
-          }
-        }
-      });
-      blenderModelGroup.add(gltf.scene);
-      // Once authentic Blender model is ready, hide procedural geometry to prevent overlap
-      interiorGroup.visible = false;
-      console.log('✅ [Blender 3D] Loaded authentic photorealistic apartment.glb successfully!');
-    },
-    undefined,
-    (err) => {
-      console.warn('⚠️ [Blender 3D] Could not load apartment.glb, keeping procedural fallback:', err);
-    }
-  );
+  interiorGroup.visible = true;
 
   // Interior Marble Floor Slab (z from -2.2 to +3.65, x from -6.15 to +6.15, clipped curve top-left)
   const intShape = new THREE.Shape();
