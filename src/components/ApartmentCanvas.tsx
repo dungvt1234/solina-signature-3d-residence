@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
@@ -207,6 +208,16 @@ export default function ApartmentCanvas({
     scene.environment = envTex;
     scene.environmentIntensity = 0.45;
     pmremGenerator.dispose();
+
+    // Load authentic coastal resort sunrise HDRI for realistic PBR reflections
+    let loadedHdrTex: THREE.DataTexture | null = null;
+    const rgbeLoader = new RGBELoader();
+    rgbeLoader.load('./textures/hdr/coastal_sunrise.hdr', (hdrTex) => {
+      hdrTex.mapping = THREE.EquirectangularReflectionMapping;
+      loadedHdrTex = hdrTex as unknown as THREE.DataTexture;
+      scene.environment = hdrTex;
+      scene.environmentIntensity = 0.75;
+    });
 
     // 3. Build Solina Signature B.11.17 Residence
     const textures = createProceduralTextures(renderer);
@@ -602,6 +613,7 @@ export default function ApartmentCanvas({
       mats.dispose();
       textures.dispose();
       envTex.dispose();
+      loadedHdrTex?.dispose();
       renderer.dispose();
       if (canvas.parentElement === container) {
         container.removeChild(canvas);

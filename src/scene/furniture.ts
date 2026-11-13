@@ -46,6 +46,27 @@ export function createMaterialLibrary(
     extraDisposables.push(item);
   };
 
+  // Real Photographic PBR Marble Texture Set (Poly Haven CC0 Scan)
+  const texLoader = new THREE.TextureLoader();
+  const realMarbleDiff = texLoader.load('./textures/marble/marble_diff.jpg');
+  realMarbleDiff.wrapS = THREE.RepeatWrapping;
+  realMarbleDiff.wrapT = THREE.RepeatWrapping;
+  realMarbleDiff.repeat.set(4, 3);
+  realMarbleDiff.colorSpace = THREE.SRGBColorSpace;
+  registerDisposable(realMarbleDiff);
+
+  const realMarbleRough = texLoader.load('./textures/marble/marble_rough.jpg');
+  realMarbleRough.wrapS = THREE.RepeatWrapping;
+  realMarbleRough.wrapT = THREE.RepeatWrapping;
+  realMarbleRough.repeat.set(4, 3);
+  registerDisposable(realMarbleRough);
+
+  const realMarbleNor = texLoader.load('./textures/marble/marble_nor.jpg');
+  realMarbleNor.wrapS = THREE.RepeatWrapping;
+  realMarbleNor.wrapT = THREE.RepeatWrapping;
+  realMarbleNor.repeat.set(4, 3);
+  registerDisposable(realMarbleNor);
+
   const plasterWall = new THREE.MeshStandardMaterial({
     color: 0xe0d6c8,
     roughness: 0.9,
@@ -61,29 +82,32 @@ export function createMaterialLibrary(
   });
 
   const marbleFloor = new THREE.MeshPhysicalMaterial({
-    color: 0xebe3d7,
-    map: textures.marbleFloor,
-    roughnessMap: textures.marbleFloorRoughness,
-    bumpMap: textures.marbleFloorBump,
-    bumpScale: 0.007,
-    roughness: 0.88,
+    color: 0xf5efe6,
+    map: realMarbleDiff,
+    roughnessMap: realMarbleRough,
+    normalMap: realMarbleNor,
+    normalScale: new THREE.Vector2(0.45, 0.45),
+    roughness: 0.22,
     metalness: 0.02,
-    clearcoat: 0.34,
-    clearcoatRoughness: 0.26,
-    envMapIntensity: 0.5,
+    clearcoat: 0.55,
+    clearcoatRoughness: 0.16,
+    envMapIntensity: 0.85,
     transparent: !isSoftwareGl,
-    opacity: isSoftwareGl ? 1.0 : 0.87,
+    opacity: isSoftwareGl ? 1.0 : 0.88,
     depthWrite: true,
   });
 
   const marbleSlab = new THREE.MeshPhysicalMaterial({
-    color: 0xf0e9de,
-    map: textures.marbleTable,
-    roughness: 0.24,
+    color: 0xfbf8f2,
+    map: realMarbleDiff,
+    roughnessMap: realMarbleRough,
+    normalMap: realMarbleNor,
+    normalScale: new THREE.Vector2(0.3, 0.3),
+    roughness: 0.18,
     metalness: 0.02,
-    clearcoat: 0.42,
-    clearcoatRoughness: 0.2,
-    envMapIntensity: 0.6,
+    clearcoat: 0.62,
+    clearcoatRoughness: 0.12,
+    envMapIntensity: 0.9,
   });
 
   const travertine = new THREE.MeshStandardMaterial({
