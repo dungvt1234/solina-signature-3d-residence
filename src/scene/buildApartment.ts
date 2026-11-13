@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { WALL_HEIGHT, WALL_SEGMENTS, LightingPreset } from './apartmentData';
 import {
   MaterialLibrary,
@@ -216,6 +217,47 @@ export function buildSolinaApartment(
     root.add(floorReflector);
   }
 
+  // Interior procedural fallback group (replaced seamlessly when Blender GLB model loads)
+  const interiorGroup = new THREE.Group();
+  interiorGroup.name = 'Procedural_Apartment_Fallback';
+  root.add(interiorGroup);
+
+  // Load Photorealistic Blender-Exported glTF Model (apartment.glb)
+  const gltfLoader = new GLTFLoader();
+  const blenderModelGroup = new THREE.Group();
+  blenderModelGroup.name = 'Blender_Apartment_GLB';
+  root.add(blenderModelGroup);
+
+  gltfLoader.load(
+    './models/apartment.glb',
+    (gltf) => {
+      gltf.scene.traverse((child) => {
+        if ((child as THREE.Mesh).isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          const mesh = child as THREE.Mesh;
+          if (mesh.material) {
+            const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+            mats.forEach((m) => {
+              if (m && 'envMapIntensity' in m) {
+                (m as any).envMapIntensity = 1.0;
+                m.needsUpdate = true;
+              }
+            });
+          }
+        }
+      });
+      blenderModelGroup.add(gltf.scene);
+      // Once authentic Blender model is ready, hide procedural geometry to prevent overlap
+      interiorGroup.visible = false;
+      console.log('✅ [Blender 3D] Loaded authentic photorealistic apartment.glb successfully!');
+    },
+    undefined,
+    (err) => {
+      console.warn('⚠️ [Blender 3D] Could not load apartment.glb, keeping procedural fallback:', err);
+    }
+  );
+
   // Interior Marble Floor Slab (z from -2.2 to +3.65, x from -6.15 to +6.15, clipped curve top-left)
   const intShape = new THREE.Shape();
   intShape.moveTo(-6.12, 3.62);
@@ -234,7 +276,7 @@ export function buildSolinaApartment(
   const intFloor = new THREE.Mesh(intFloorGeo, mats.marbleFloor);
   intFloor.position.y = 0.008;
   intFloor.receiveShadow = true;
-  root.add(intFloor);
+  interiorGroup.add(intFloor);
 
   // 1a-2. Sàn Gỗ Laminate Phòng Ngủ (đè lên Marble, theo tiêu chuẩn Beacon)
   // Master bedroom: x[-6.12..-2.42], z[-2.2..1.15]
@@ -250,7 +292,7 @@ export function buildSolinaApartment(
   const masterFloorMesh = new THREE.Mesh(masterFloorGeo, mats.woodLaminate);
   masterFloorMesh.position.y = 0.009;
   masterFloorMesh.receiveShadow = true;
-  root.add(masterFloorMesh);
+  interiorGroup.add(masterFloorMesh);
 
   // Bedroom 2: x[-2.42..1.15], z[-2.2..1.15]
   const bed2FloorShape = new THREE.Shape();
@@ -264,7 +306,7 @@ export function buildSolinaApartment(
   const bed2FloorMesh = new THREE.Mesh(bed2FloorGeo, mats.woodLaminate);
   bed2FloorMesh.position.y = 0.009;
   bed2FloorMesh.receiveShadow = true;
-  root.add(bed2FloorMesh);
+  interiorGroup.add(bed2FloorMesh);
 
   // 1a-3. Len chân tường trắng sứ (Skirting boards) dọc theo toàn bộ tường
   function addSkirting(x1: number, z1: number, x2: number, z2: number) {
@@ -276,7 +318,7 @@ export function buildSolinaApartment(
     mesh.position.set((x1+x2)/2, 0.04, (z1+z2)/2);
     mesh.rotation.y = -angle;
     mesh.castShadow = true;
-    root.add(mesh);
+    interiorGroup.add(mesh);
   }
   // Tường ngoài căn hộ
   addSkirting(-6.12, 3.62, 6.12, 3.62);   // Tường sau
@@ -310,7 +352,7 @@ export function buildSolinaApartment(
   const balcBase = new THREE.Mesh(balcBaseGeo, mats.travertine);
   balcBase.position.y = 0.003;
   balcBase.receiveShadow = true;
-  root.add(balcBase);
+  interiorGroup.add(balcBase);
 
   const balcGrassGeo = new THREE.ExtrudeGeometry(balcShape, {
     depth: 0.018,
@@ -321,7 +363,7 @@ export function buildSolinaApartment(
   const balcFloor = new THREE.Mesh(balcGrassGeo, mats.grassTurf);
   balcFloor.position.y = 0.009;
   balcFloor.receiveShadow = true;
-  root.add(balcFloor);
+  interiorGroup.add(balcFloor);
 
   // 2. Curved Balcony Outer Glass Railing + Master Bedroom Curved Glass Corner
   const curveSteps = 14;
@@ -341,7 +383,7 @@ export function buildSolinaApartment(
     const x2 = cx + Math.cos(a1) * rx;
     const z2 = cz + Math.sin(a1) * rz;
 
-    root.add(makeWallMesh(x1, z1, x2, z2, 0.05, 1.12, mats, 'railing'));
+    interiorGroup.add(makeWallMesh(x1, z1, x2, z2, 0.05, 1.12, mats, 'railing'));
 
     // Master bedroom inner curved glass facade from (-6.12, -1.5) to (-4.25, -2.2)
     if (i < curveSteps - 1) {
@@ -353,13 +395,13 @@ export function buildSolinaApartment(
       const mz1 = mcz + Math.sin(a0) * mrz;
       const mx2 = mcx + Math.cos(a1) * mrx;
       const mz2 = mcz + Math.sin(a1) * mrz;
-      root.add(makeWallMesh(mx1, mz1, mx2, mz2, 0.06, 2.65, mats, 'glass'));
+      interiorGroup.add(makeWallMesh(mx1, mz1, mx2, mz2, 0.06, 2.65, mats, 'glass'));
     }
   }
 
   // Straight Wall Segments
   for (const seg of WALL_SEGMENTS) {
-    root.add(
+    interiorGroup.add(
       makeWallMesh(
         seg.x1,
         seg.z1,
@@ -386,7 +428,7 @@ export function buildSolinaApartment(
     );
     lintel.position.set((x1 + x2) / 2, doorH + h / 2, (z1 + z2) / 2);
     lintel.rotation.y = -angle;
-    root.add(lintel);
+    interiorGroup.add(lintel);
   };
   addDoorLintel(4.95, 3.62, 5.9, 3.62, 2.28); // Main entrance
   addDoorLintel(-3.38, 1.5, -2.55, 1.5, 2.22); // Master bath door
@@ -397,173 +439,173 @@ export function buildSolinaApartment(
   // 3. Hinged Wooden Doors (swung open for effortless POV walkthrough)
   const mainDoor = createWoodenDoor(mats, 0.92, 2.26, -Math.PI * 0.44);
   mainDoor.position.set(5.42, 0, 3.60);
-  root.add(mainDoor);
+  interiorGroup.add(mainDoor);
 
   const bed2Door = createWoodenDoor(mats, 0.84, 2.20, Math.PI * 0.44);
   bed2Door.position.set(0.88, 0, 1.15);
-  root.add(bed2Door);
+  interiorGroup.add(bed2Door);
 
   const masterDoor = createWoodenDoor(mats, 0.84, 2.20, Math.PI * 0.44);
   masterDoor.position.set(-2.42, 0, 1.04);
   masterDoor.rotation.y = Math.PI / 2;
-  root.add(masterDoor);
+  interiorGroup.add(masterDoor);
 
   const mbathDoor = createWoodenDoor(mats, 0.74, 2.18, -Math.PI * 0.42);
   mbathDoor.position.set(-2.98, 0, 1.50);
-  root.add(mbathDoor);
+  interiorGroup.add(mbathDoor);
 
   const cbathDoor = createWoodenDoor(mats, 0.74, 2.18, -Math.PI * 0.42);
   cbathDoor.position.set(-1.18, 0, 1.50);
-  root.add(cbathDoor);
+  interiorGroup.add(cbathDoor);
 
   // 4. Populate Rooms with Exact Floorplan Furniture
 
   // --- MASTER BEDROOM (Top-Left) ---
   const masterBed = createKingBed(mats);
   masterBed.position.set(-6.02, 0, -0.45);
-  root.add(masterBed);
+  interiorGroup.add(masterBed);
 
   const masterWardrobe = createWardrobe(mats, 1.85);
   masterWardrobe.position.set(-5.0, 0, 1.16);
-  root.add(masterWardrobe);
+  interiorGroup.add(masterWardrobe);
 
   // --- MASTER BATHROOM (Bottom-Left) ---
   const tub = createBathtub(mats);
   tub.position.set(-5.50, 0, 2.60);
-  root.add(tub);
+  interiorGroup.add(tub);
 
   const mToilet = createToilet(mats);
   mToilet.position.set(-4.38, 0, 2.45);
-  root.add(mToilet);
+  interiorGroup.add(mToilet);
 
   const mShower = createShowerColumn(mats);
   mShower.position.set(-3.55, 0, 3.45);
   mShower.rotation.y = Math.PI;
-  root.add(mShower);
+  interiorGroup.add(mShower);
 
   const mVanity = createVanitySink(mats);
   mVanity.position.set(-2.85, 0, 3.05);
-  root.add(mVanity);
+  interiorGroup.add(mVanity);
 
   const mBathPlant = createPottedPalm(mats, 0.58);
   mBathPlant.position.set(-3.55, 0, 2.85);
-  root.add(mBathPlant);
+  interiorGroup.add(mBathPlant);
 
   // Master Bath frameless glass shower & WC front enclosures
-  root.add(makeWallMesh(-4.88, 1.58, -4.46, 1.58, 0.03, 2.25, mats, 'glass'));
-  root.add(makeWallMesh(-3.92, 1.58, -3.55, 1.58, 0.03, 2.25, mats, 'glass'));
+  interiorGroup.add(makeWallMesh(-4.88, 1.58, -4.46, 1.58, 0.03, 2.25, mats, 'glass'));
+  interiorGroup.add(makeWallMesh(-3.92, 1.58, -3.55, 1.58, 0.03, 2.25, mats, 'glass'));
 
   // --- COMMON BATHROOM (Bottom-Center) ---
   const cToilet = createToilet(mats);
   cToilet.position.set(-1.92, 0, 3.20);
   cToilet.rotation.y = Math.PI;
-  root.add(cToilet);
+  interiorGroup.add(cToilet);
 
   const cShower = createShowerColumn(mats);
   cShower.position.set(-2.22, 0, 2.10);
   cShower.rotation.y = Math.PI / 2;
-  root.add(cShower);
+  interiorGroup.add(cShower);
 
   // Common Bath glass shower screen
-  root.add(makeWallMesh(-2.30, 2.52, -1.68, 2.52, 0.03, 2.20, mats, 'glass'));
+  interiorGroup.add(makeWallMesh(-2.30, 2.52, -1.68, 2.52, 0.03, 2.20, mats, 'glass'));
 
   const cVanity = createVanitySink(mats);
   cVanity.position.set(-1.08, 0, 3.05);
-  root.add(cVanity);
+  interiorGroup.add(cVanity);
 
   const cBathPlant = createPottedPalm(mats, 0.52);
   cBathPlant.position.set(-1.98, 0, 1.80);
-  root.add(cBathPlant);
+  interiorGroup.add(cBathPlant);
 
   // --- BEDROOM 2 (Center) ---
   const bed2 = createKingBed(mats);
   bed2.position.set(-2.12, 0, -0.52);
-  root.add(bed2);
+  interiorGroup.add(bed2);
 
   const bed2Wardrobe = createWardrobe(mats, 1.75);
   bed2Wardrobe.position.set(-0.85, 0, 0.80);
-  root.add(bed2Wardrobe);
+  interiorGroup.add(bed2Wardrobe);
 
   const bed2Desk = createVanityDesk(mats);
   bed2Desk.position.set(1.06, 0, -0.75);
-  root.add(bed2Desk);
+  interiorGroup.add(bed2Desk);
 
   // Sheer Flowing Curtains framing Balcony Glass Facades
   const curtainMbed = createSheerCurtain(mats, 0.62, 2.60);
   curtainMbed.position.set(-2.72, 0, -2.08);
-  root.add(curtainMbed);
+  interiorGroup.add(curtainMbed);
 
   const curtainBed2L = createSheerCurtain(mats, 0.68, 2.60);
   curtainBed2L.position.set(-1.80, 0, -2.08);
-  root.add(curtainBed2L);
+  interiorGroup.add(curtainBed2L);
 
   const curtainBed2R = createSheerCurtain(mats, 0.55, 2.60);
   curtainBed2R.position.set(1.05, 0, -2.08);
-  root.add(curtainBed2R);
+  interiorGroup.add(curtainBed2R);
 
   const curtainLivL = createSheerCurtain(mats, 0.72, 2.60);
   curtainLivL.position.set(1.82, 0, -2.08);
-  root.add(curtainLivL);
+  interiorGroup.add(curtainLivL);
 
   const curtainLivR = createSheerCurtain(mats, 0.78, 2.60);
   curtainLivR.position.set(5.55, 0, -2.08);
-  root.add(curtainLivR);
+  interiorGroup.add(curtainLivR);
 
   // Framed Coastal Wall Artworks
   const diningArt = createFramedArt(mats, 1.15, 0.82, 1);
   diningArt.position.set(5.96, 1.58, 2.25);
   diningArt.rotation.y = -Math.PI / 2;
-  root.add(diningArt);
+  interiorGroup.add(diningArt);
 
   const bed2Art = createFramedArt(mats, 0.85, 0.65, 2);
   bed2Art.position.set(-0.45, 1.65, 1.06);
   bed2Art.rotation.y = Math.PI;
-  root.add(bed2Art);
+  interiorGroup.add(bed2Art);
 
   // --- LIVING ROOM (Top-Right) ---
   const livingRug = new THREE.Mesh(new THREE.BoxGeometry(3.55, 0.015, 2.85), mats.coastalRug);
   livingRug.position.set(3.85, 0.015, -0.45);
   livingRug.receiveShadow = true;
-  root.add(livingRug);
+  interiorGroup.add(livingRug);
 
   const curvedSofa = createCurvedSofa(mats);
   curvedSofa.position.set(3.80, 0, -0.45);
-  root.add(curvedSofa);
+  interiorGroup.add(curvedSofa);
 
   const coffeeTable = createRoundCoffeeTable(mats);
   coffeeTable.position.set(3.80, 0, -0.45);
-  root.add(coffeeTable);
+  interiorGroup.add(coffeeTable);
 
   const armchair = createAccentArmchair(mats);
   armchair.position.set(2.48, 0, -1.35);
   armchair.rotation.y = Math.PI * 0.25;
-  root.add(armchair);
+  interiorGroup.add(armchair);
 
   const tvWall = createTvFeatureWall(mats);
   tvWall.position.set(6.0, 0, -0.45);
-  root.add(tvWall);
+  interiorGroup.add(tvWall);
 
   // Living Room & Foyer Tropical Palms
   const palmLiving1 = createPottedPalm(mats, 0.95);
   palmLiving1.position.set(2.05, 0, 0.72);
-  root.add(palmLiving1);
+  interiorGroup.add(palmLiving1);
 
   const palmLiving2 = createPottedPalm(mats, 1.05);
   palmLiving2.position.set(5.48, 0, 0.85);
-  root.add(palmLiving2);
+  interiorGroup.add(palmLiving2);
 
   const palmFoyer = createPottedPalm(mats, 0.78);
   palmFoyer.position.set(4.65, 0, 3.22);
-  root.add(palmFoyer);
+  interiorGroup.add(palmFoyer);
 
   // --- DINING & KITCHEN (Bottom-Right) ---
   const diningSet = createDiningSet(mats);
   diningSet.position.set(3.65, 0, 1.85);
-  root.add(diningSet);
+  interiorGroup.add(diningSet);
 
   const kitchen = createKitchenCounter(mats);
   kitchen.position.set(1.98, 0, 3.22);
-  root.add(kitchen);
+  interiorGroup.add(kitchen);
 
   // Mặt đá Quartz bàn bếp (đè lên top tủ bếp — theo tiêu chuẩn Beacon: Đá Quartz)
   const quartzCounterTop = new THREE.Mesh(
@@ -573,7 +615,7 @@ export function buildSolinaApartment(
   quartzCounterTop.position.set(1.98, 0.925, 3.22);
   quartzCounterTop.castShadow = true;
   quartzCounterTop.receiveShadow = true;
-  root.add(quartzCounterTop);
+  interiorGroup.add(quartzCounterTop);
 
   // Mặt đảo bếp Quartz
   const quartzIsland = new THREE.Mesh(
@@ -582,7 +624,7 @@ export function buildSolinaApartment(
   );
   quartzIsland.position.set(1.98, 0.945, 2.28);
   quartzIsland.castShadow = true;
-  root.add(quartzIsland);
+  interiorGroup.add(quartzIsland);
 
   // Điều hòa âm trần phòng khách — Daikin/Mitsubishi (theo tiêu chuẩn Beacon)
   function addCeilingAC(x: number, z: number) {
@@ -591,7 +633,7 @@ export function buildSolinaApartment(
       mats.acUnit
     );
     body.position.set(x, WALL_HEIGHT - 0.035, z);
-    root.add(body);
+    interiorGroup.add(body);
     // Louver grill
     for (let i = 0; i < 5; i++) {
       const louver = new THREE.Mesh(
@@ -600,7 +642,7 @@ export function buildSolinaApartment(
       );
       louver.position.set(x, WALL_HEIGHT - 0.068, z - 0.08 + i * 0.04);
       louver.rotation.x = 0.2;
-      root.add(louver);
+      interiorGroup.add(louver);
     }
   }
   addCeilingAC(3.85, -0.80);   // Phòng khách trái
@@ -609,23 +651,23 @@ export function buildSolinaApartment(
   // --- BALCONY LOUNGE & PALMS ---
   const rattanLounge = createRattanLoungeSet(mats);
   rattanLounge.position.set(-0.55, 0, -3.05);
-  root.add(rattanLounge);
+  interiorGroup.add(rattanLounge);
 
   const balcPalm1 = createPottedPalm(mats, 1.15);
   balcPalm1.position.set(-5.05, 0, -2.95);
-  root.add(balcPalm1);
+  interiorGroup.add(balcPalm1);
 
   const balcPalm2 = createPottedPalm(mats, 1.2);
   balcPalm2.position.set(-2.95, 0, -3.35);
-  root.add(balcPalm2);
+  interiorGroup.add(balcPalm2);
 
   const balcPalm3 = createPottedPalm(mats, 1.05);
   balcPalm3.position.set(1.85, 0, -3.35);
-  root.add(balcPalm3);
+  interiorGroup.add(balcPalm3);
 
   const balcPalm4 = createPottedPalm(mats, 1.25);
   balcPalm4.position.set(5.55, 0, -3.15);
-  root.add(balcPalm4);
+  interiorGroup.add(balcPalm4);
 
   // 5. Recessed Ceiling & Architectural Cove Downlights (Shown in POV Mode, Hidden in Dollhouse)
   const ceilMat = new THREE.MeshStandardMaterial({
