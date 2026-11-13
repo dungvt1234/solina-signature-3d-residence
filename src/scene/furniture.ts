@@ -168,24 +168,31 @@ export function createMaterialLibrary(
     metalness: 0.03,
   });
 
-  // Gỗ Laminate sàn phòng ngủ — ấm, vân gỗ nâu sáng theo tiêu chuẩn Beacon
+  // Gỗ Laminate sàn phòng ngủ — vân gỗ sồi ấm áp theo tiêu chuẩn Beacon
   const woodLaminate = new THREE.MeshPhysicalMaterial({
-    color: 0xc8a97e,
-    roughness: 0.68,
-    metalness: 0.0,
-    clearcoat: 0.18,
-    clearcoatRoughness: 0.55,
-    reflectivity: 0.12,
+    color: 0xd4b082,
+    map: textures.woodGrain,
+    bumpMap: textures.woodGrain,
+    bumpScale: 0.003,
+    roughness: 0.52,
+    metalness: 0.01,
+    clearcoat: 0.35,
+    clearcoatRoughness: 0.40,
+    reflectivity: 0.25,
+    envMapIntensity: 0.85,
   });
 
-  // Đá Quartz mặt bàn bếp — trắng vân xám, bóng mịn
+  // Đá Quartz mặt bàn bếp — trắng vân xám tự nhiên cao cấp
   const quartzTop = new THREE.MeshPhysicalMaterial({
-    color: 0xf0ede8,
+    color: 0xfaf8f5,
+    map: realMarbleDiff,
+    roughnessMap: realMarbleRough,
     roughness: 0.04,
     metalness: 0.0,
     clearcoat: 1.0,
-    clearcoatRoughness: 0.08,
-    reflectivity: 0.9,
+    clearcoatRoughness: 0.05,
+    reflectivity: 0.95,
+    envMapIntensity: 1.10,
   });
 
   // Len chân tường trắng sứ — skirting board

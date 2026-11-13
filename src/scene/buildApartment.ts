@@ -832,6 +832,19 @@ export function buildSolinaApartment(
   bathFill.position.set(-3.2, 2.5, 2.5);
   scene.add(bathFill);
 
+  // Architectural Indirect Global Illumination (GI): Floor-to-Ceiling Sunlight Bounce Lights
+  const livingFloorBounce = new THREE.PointLight(0xffeedb, 0.75, 8.5, 1.8);
+  livingFloorBounce.position.set(3.6, 0.15, -1.2);
+  scene.add(livingFloorBounce);
+
+  const mbedFloorBounce = new THREE.PointLight(0xffe8cf, 0.65, 7.5, 1.8);
+  mbedFloorBounce.position.set(-4.2, 0.15, -1.2);
+  scene.add(mbedFloorBounce);
+
+  const bed2FloorBounce = new THREE.PointLight(0xffe8cf, 0.60, 7.0, 1.8);
+  bed2FloorBounce.position.set(-0.6, 0.15, -1.2);
+  scene.add(bed2FloorBounce);
+
   scene.add(root);
 
   const applyLighting = (preset: LightingPreset, targetScene: THREE.Scene) => {

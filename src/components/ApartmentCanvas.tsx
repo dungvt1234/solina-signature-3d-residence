@@ -178,7 +178,7 @@ export default function ApartmentCanvas({
 
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 0.78;
+    renderer.toneMappingExposure = 0.96;
     renderer.setPixelRatio(isSoftwareGl ? 1 : Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
     renderer.shadowMap.enabled = !isSoftwareGl;
@@ -216,7 +216,7 @@ export default function ApartmentCanvas({
       hdrTex.mapping = THREE.EquirectangularReflectionMapping;
       loadedHdrTex = hdrTex as unknown as THREE.DataTexture;
       scene.environment = hdrTex;
-      scene.environmentIntensity = 0.75;
+      scene.environmentIntensity = 1.05;
     });
 
     // 3. Build Solina Signature B.11.17 Residence
@@ -240,14 +240,14 @@ export default function ApartmentCanvas({
 
       gtaoPass = new GTAOPass(scene, camera, width, height);
       gtaoPass.output = GTAOPass.OUTPUT.Default;
-      gtaoPass.blendIntensity = 0.65;
+      gtaoPass.blendIntensity = 1.15;
       gtaoPass.updateGtaoMaterial({
-        radius: 0.38,
-        distanceExponent: 1.8,
-        thickness: 1.0,
-        distanceFallOff: 1.0,
+        radius: 0.55,
+        distanceExponent: 1.6,
+        thickness: 1.2,
+        distanceFallOff: 0.9,
         scale: 1.0,
-        samples: 16,
+        samples: 32,
       });
       gtaoPass.updatePdMaterial({
         lumaPhi: 10,
@@ -256,15 +256,15 @@ export default function ApartmentCanvas({
         radius: 4,
         radiusExponent: 2,
         rings: 2,
-        samples: 12,
+        samples: 16,
       });
       composer.addPass(gtaoPass);
 
       bloomPass = new UnrealBloomPass(
         new THREE.Vector2(width, height),
-        0.11,
-        0.45,
-        1.18
+        0.14,
+        0.52,
+        0.96
       );
       composer.addPass(bloomPass);
 
