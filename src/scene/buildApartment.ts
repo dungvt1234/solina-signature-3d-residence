@@ -205,7 +205,7 @@ export function buildSolinaApartment(
 
     const reflGeo = new THREE.ShapeGeometry(reflShape, 24);
     floorReflector = new Reflector(reflGeo, {
-      color: 0xa69b8d,
+      color: 0xd6d6d6,
       textureWidth: 512,
       textureHeight: 512,
       clipBias: 0.003,

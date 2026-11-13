@@ -81,17 +81,18 @@ export function createMaterialLibrary(
     metalness: 0.1,
   });
 
+  // Gạch Viglacera 80x80 Trắng Sứ Men Bóng Nano (Viglacera Platinum / Signature 800x800mm)
   const marbleFloor = new THREE.MeshPhysicalMaterial({
-    color: 0xf5efe6,
-    map: realMarbleDiff,
-    roughnessMap: realMarbleRough,
-    normalMap: realMarbleNor,
-    normalScale: new THREE.Vector2(0.45, 0.45),
-    roughness: 0.22,
-    metalness: 0.02,
-    clearcoat: 0.55,
-    clearcoatRoughness: 0.16,
-    envMapIntensity: 0.85,
+    color: 0xffffff,
+    map: textures.marbleFloor,
+    roughnessMap: textures.marbleFloorRoughness,
+    bumpMap: textures.marbleFloorBump,
+    bumpScale: 0.0035,
+    roughness: 0.10, // Siêu bóng gương kính Nano
+    metalness: 0.01,
+    clearcoat: 0.92, // Men bóng kính trong suốt
+    clearcoatRoughness: 0.07,
+    envMapIntensity: 0.90,
     transparent: !isSoftwareGl,
     opacity: isSoftwareGl ? 1.0 : 0.88,
     depthWrite: true,

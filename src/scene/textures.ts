@@ -91,134 +91,159 @@ function heightCanvasToNormalTexture(
 export function createProceduralTextures(renderer: THREE.WebGLRenderer): ProceduralTextures {
   const maxAniso = renderer.capabilities.getMaxAnisotropy();
 
-  // 1. High-Res Crema Marfil / Calacatta Marble Tile Floor (Albedo + Roughness + Grout Bump)
+  // 1. Gạch Viglacera 80x80 Trắng Sứ Men Bóng Nano (Viglacera Platinum / Signature 800x800mm)
+  // 4x4 tiles in 2048x2048 canvas => 512px per 80cm tile. (3.2m x 3.2m block)
   const marbleCanvas = document.createElement('canvas');
-  marbleCanvas.width = 1024;
-  marbleCanvas.height = 1024;
+  marbleCanvas.width = 2048;
+  marbleCanvas.height = 2048;
   const mctx = marbleCanvas.getContext('2d')!;
-  mctx.fillStyle = '#efe5d6';
-  mctx.fillRect(0, 0, 1024, 1024);
+  mctx.fillStyle = '#fafbfe'; // Pure porcelain white
+  mctx.fillRect(0, 0, 2048, 2048);
 
-  // Per-tile subtle tonal shift (4x4 tiles)
-  for (let ty = 0; ty < 4; ty++) {
-    for (let tx = 0; tx < 4; tx++) {
-      const shade = ((tx * 7 + ty * 13) % 5) - 2;
-      mctx.fillStyle = `rgba(${238 + shade * 2}, ${228 + shade * 2}, ${212 + shade * 2}, 0.35)`;
-      mctx.fillRect(tx * 256, ty * 256, 256, 256);
+  const tileSize = 512;
+  const tileCount = 4;
+
+  // Individual tile subtle tonal shift and random Calacatta cloud veins per tile
+  for (let ty = 0; ty < tileCount; ty++) {
+    for (let tx = 0; tx < tileCount; tx++) {
+      const ox = tx * tileSize;
+      const oy = ty * tileSize;
+
+      // Subtle per-tile brightness nuance (0.5% - 1%)
+      const toneSeed = (tx * 11 + ty * 17) % 5;
+      const toneColors = ['#fbfcff', '#f8f9fd', '#fdfdfe', '#f7f8fc', '#fafbfe'];
+      mctx.fillStyle = toneColors[toneSeed];
+      mctx.fillRect(ox, oy, tileSize, tileSize);
+
+      // Soft light-gray smoky watercolor cloud veining (vân mây khói Viglacera)
+      for (let c = 0; c < 6; c++) {
+        const cx = ox + Math.random() * tileSize;
+        const cy = oy + Math.random() * tileSize;
+        const crad = 60 + Math.random() * 120;
+        const cgrad = mctx.createRadialGradient(cx, cy, 8, cx, cy, crad);
+        cgrad.addColorStop(0, 'rgba(182, 192, 206, 0.16)');
+        cgrad.addColorStop(0.5, 'rgba(215, 222, 232, 0.08)');
+        cgrad.addColorStop(1, 'rgba(250, 251, 254, 0)');
+        mctx.fillStyle = cgrad;
+        mctx.fillRect(ox, oy, tileSize, tileSize);
+      }
+
+      // Elegant delicate Calacatta smoky & warm-gray veins across tile
+      const veinCount = 2 + (tx + ty) % 3;
+      for (let v = 0; v < veinCount; v++) {
+        mctx.strokeStyle = v % 2 === 0 ? 'rgba(142, 154, 172, 0.32)' : 'rgba(182, 172, 154, 0.18)';
+        mctx.lineWidth = v % 2 === 0 ? 1.6 : 0.9;
+        mctx.beginPath();
+        let vx = ox + 40 + Math.random() * (tileSize - 80);
+        let vy = oy + 40 + Math.random() * (tileSize - 80);
+        mctx.moveTo(vx, vy);
+        const steps = 6 + Math.floor(Math.random() * 5);
+        for (let s = 0; s < steps; s++) {
+          vx += (Math.random() - 0.42) * 75;
+          vy += (Math.random() - 0.52) * 65;
+          mctx.lineTo(
+            Math.max(ox + 4, Math.min(ox + tileSize - 4, vx)),
+            Math.max(oy + 4, Math.min(oy + tileSize - 4, vy))
+          );
+        }
+        mctx.stroke();
+      }
     }
   }
 
-  for (let i = 0; i < 85; i++) {
-    const x = Math.random() * 1024;
-    const y = Math.random() * 1024;
-    const r = 60 + Math.random() * 150;
-    const grad = mctx.createRadialGradient(x, y, 6, x, y, r);
-    grad.addColorStop(0, i % 2 === 0 ? 'rgba(220, 200, 174, 0.24)' : 'rgba(255, 251, 245, 0.28)');
-    grad.addColorStop(1, 'rgba(239, 229, 214, 0)');
-    mctx.fillStyle = grad;
-    mctx.fillRect(0, 0, 1024, 1024);
-  }
-
-  // Organic layered marble veins (rich Crema Marfil contrast)
-  for (let v = 0; v < 34; v++) {
-    mctx.strokeStyle =
-      v % 4 === 0 ? 'rgba(164, 134, 98, 0.42)' : 'rgba(196, 176, 148, 0.30)';
-    mctx.lineWidth = v % 3 === 0 ? 2.4 : 1.15;
+  // Viglacera rectified precision grout joints (mạch ron siêu mảnh 1.5mm)
+  // Micro-bevel bright edge highlight
+  mctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+  mctx.lineWidth = 1.5;
+  for (let g = 0; g <= 2048; g += tileSize) {
     mctx.beginPath();
-    let vx = Math.random() * 1024;
-    let vy = Math.random() * 1024;
-    mctx.moveTo(vx, vy);
-    for (let s = 0; s < 10; s++) {
-      vx += (Math.random() - 0.32) * 90;
-      vy += (Math.random() - 0.5) * 70;
-      mctx.lineTo(vx, vy);
-    }
+    mctx.moveTo(g + 1.5, 0);
+    mctx.lineTo(g + 1.5, 2048);
+    mctx.stroke();
+    mctx.beginPath();
+    mctx.moveTo(0, g + 1.5);
+    mctx.lineTo(2048, g + 1.5);
     mctx.stroke();
   }
 
-  // Grout grid (256px tiles) with subtle chamfer highlight
-  mctx.strokeStyle = 'rgba(255, 250, 242, 0.35)';
-  mctx.lineWidth = 4.5;
-  for (let g = 0; g <= 1024; g += 256) {
-    mctx.beginPath();
-    mctx.moveTo(g + 2, 0);
-    mctx.lineTo(g + 2, 1024);
-    mctx.stroke();
-    mctx.beginPath();
-    mctx.moveTo(0, g + 2);
-    mctx.lineTo(1024, g + 2);
-    mctx.stroke();
-  }
-  mctx.strokeStyle = 'rgba(154, 138, 118, 0.62)';
-  mctx.lineWidth = 2.4;
-  for (let g = 0; g <= 1024; g += 256) {
+  // Clean light-silver grout joint line
+  mctx.strokeStyle = 'rgba(196, 202, 210, 0.72)';
+  mctx.lineWidth = 2.2;
+  for (let g = 0; g <= 2048; g += tileSize) {
     mctx.beginPath();
     mctx.moveTo(g, 0);
-    mctx.lineTo(g, 1024);
+    mctx.lineTo(g, 2048);
     mctx.stroke();
     mctx.beginPath();
     mctx.moveTo(0, g);
-    mctx.lineTo(1024, g);
+    mctx.lineTo(2048, g);
     mctx.stroke();
   }
-  const marbleFloor = configureTexture(new THREE.CanvasTexture(marbleCanvas), maxAniso, 3.5, 2.2, true);
 
-  // Marble Floor Roughness & Bump (glossy polished stone, matte grout)
+  // Exact 80cm x 80cm scale: 12.24m / 3.2m = 3.825, 5.82m / 3.2m = 1.819
+  const marbleFloor = configureTexture(new THREE.CanvasTexture(marbleCanvas), maxAniso, 3.825, 1.819, true);
+
+  // Viglacera Ultra-Gloss Nano Roughness Map (mirror porcelain, matte grout)
   const marbleRoughCanvas = document.createElement('canvas');
-  marbleRoughCanvas.width = 512;
-  marbleRoughCanvas.height = 512;
+  marbleRoughCanvas.width = 1024;
+  marbleRoughCanvas.height = 1024;
   const mrctx = marbleRoughCanvas.getContext('2d')!;
-  mrctx.fillStyle = '#262626'; // very low roughness (~0.15) for crisp light reflections
-  mrctx.fillRect(0, 0, 512, 512);
-  for (let i = 0; i < 60; i++) {
-    mrctx.fillStyle = i % 2 === 0 ? 'rgba(55,55,55,0.22)' : 'rgba(18,18,18,0.22)';
+  mrctx.fillStyle = '#141414'; // ~0.08 roughness (ultra-high gloss porcelain)
+  mrctx.fillRect(0, 0, 1024, 1024);
+
+  // Subtle nano surface variation
+  for (let i = 0; i < 40; i++) {
+    mrctx.fillStyle = i % 2 === 0 ? 'rgba(32,32,32,0.18)' : 'rgba(8,8,8,0.18)';
     mrctx.beginPath();
-    mrctx.arc(Math.random() * 512, Math.random() * 512, 20 + Math.random() * 60, 0, Math.PI * 2);
+    mrctx.arc(Math.random() * 1024, Math.random() * 1024, 30 + Math.random() * 80, 0, Math.PI * 2);
     mrctx.fill();
   }
-  mrctx.strokeStyle = '#d8d8d8'; // matte grout lines
-  mrctx.lineWidth = 3;
-  for (let g = 0; g <= 512; g += 128) {
+
+  // Matte grout joint lines (~0.68 roughness)
+  mrctx.strokeStyle = '#aeaeae';
+  mrctx.lineWidth = 2.5;
+  for (let g = 0; g <= 1024; g += 256) {
     mrctx.beginPath();
     mrctx.moveTo(g, 0);
-    mrctx.lineTo(g, 512);
+    mrctx.lineTo(g, 1024);
     mrctx.stroke();
     mrctx.beginPath();
     mrctx.moveTo(0, g);
-    mrctx.lineTo(512, g);
+    mrctx.lineTo(1024, g);
     mrctx.stroke();
   }
   const marbleFloorRoughness = configureTexture(
     new THREE.CanvasTexture(marbleRoughCanvas),
     maxAniso,
-    3.5,
-    2.2,
+    3.825,
+    1.819,
     false
   );
 
+  // Viglacera Rectified Joint Bump Map
   const marbleBumpCanvas = document.createElement('canvas');
-  marbleBumpCanvas.width = 512;
-  marbleBumpCanvas.height = 512;
+  marbleBumpCanvas.width = 1024;
+  marbleBumpCanvas.height = 1024;
   const mbctx = marbleBumpCanvas.getContext('2d')!;
   mbctx.fillStyle = '#ffffff';
-  mbctx.fillRect(0, 0, 512, 512);
-  mbctx.strokeStyle = '#333333';
-  mbctx.lineWidth = 3;
-  for (let g = 0; g <= 512; g += 128) {
+  mbctx.fillRect(0, 0, 1024, 1024);
+  mbctx.strokeStyle = '#222222'; // 0.8mm micro grout depth
+  mbctx.lineWidth = 2.2;
+  for (let g = 0; g <= 1024; g += 256) {
     mbctx.beginPath();
     mbctx.moveTo(g, 0);
-    mbctx.lineTo(g, 512);
+    mbctx.lineTo(g, 1024);
     mbctx.stroke();
     mbctx.beginPath();
     mbctx.moveTo(0, g);
-    mbctx.lineTo(512, g);
+    mbctx.lineTo(1024, g);
     mbctx.stroke();
   }
   const marbleFloorBump = configureTexture(
     new THREE.CanvasTexture(marbleBumpCanvas),
     maxAniso,
-    3.5,
-    2.2,
+    3.825,
+    1.819,
     false
   );
 
